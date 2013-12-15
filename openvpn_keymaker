@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+echo "Dai ime"
+
+else
+dir=/root/vpn/$1
+if [ -e $dir/$1.zip ] ; then
+echo "Zip exists!"
+exit 1
+fi
+cd /etc/openvpn/easy-rsa/2.0/
+if [ ! -e /etc/openvpn/easy-rsa/2.0/keys/$1.csr ] ; then
+        source ./vars
+        ./build-key $1
+fi
+cd keys
+cfg=$1.ovpn
+touch $cfg
+cat /etc/openvpn/sample-client.cnf > $cfg
+echo "cert $1.crt" >> $cfg
+echo "key $1.key" >> $cfg
+echo "cipher AES-256-CBC" >>$cfg
+# uncomment for vista
+#echo "route-method exe" >>$cfg
+#echo "route-delay 2" >>$cfg
+mkdir $dir
+cp ca.crt $dir/
+cp $1.key $dir/
+cp $1.crt $dir/
+cp /etc/openvpn/keys/ta.key $dir/
+cp $cfg $dir/
+cd $dir
+zip -rl $1.zip *
+fi
+exit 0
+

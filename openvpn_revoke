@@ -1,0 +1,14 @@
+#!/bin/bash
+echo "username to remove? "
+read username
+
+
+###########################
+### revoke vpn cert     ###
+cd /etc/openvpn/easy-rsa/2.0/
+. ./vars
+./revoke-full $username
+cp /etc/openvpn/easy-rsa/2.0/keys/crl.pem /etc/openvpn/keys/crl.pem
+rm -r /root/vpn/$username
+/etc/init.d/openvpn reload
+

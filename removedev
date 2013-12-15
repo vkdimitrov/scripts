@@ -1,0 +1,42 @@
+#!/bin/bash
+echo "username to remove? "
+read username
+
+
+### delete git key 	###
+#cd /home/git/gitosis-admin/
+#sudo -u git git pull
+#sudo -u git sed "s/$username@kapitan//g" gitosis.conf > gitosis.conf.tmp
+#sudo -u git mv /home/git/gitosis-admin/gitosis.conf.tmp /home/git/gitosis-admin/gitosis.conf
+#rm /home/git/gitosis-admin/keydir/$username@kapitan.pub
+#sudo -u git git add .
+#sudo -u git git commit -am "remove $username@kapitan.pub"
+#sudo -u git git push
+
+###########################
+### revoke vpn cert     ###
+cd /etc/openvpn/easy-rsa/2.0/
+. ./vars
+./revoke-full $username
+cp /etc/openvpn/easy-rsa/2.0/keys/crl.pem /etc/openvpn/keys/crl.pem
+rm -r /root/vpn/$username
+/etc/init.d/openvpn reload
+
+###########################
+### clear samba conf    ###
+smbpasswd -x $username
+sed "s/,$username//g" /etc/samba/smb.conf > /etc/samba/smb.conf.tmp
+mv /etc/samba/smb.conf.tmp /etc/samba/smb.conf
+/etc/init.d/samba reload
+
+###########################
+### clear apache conf   ###
+rm /etc/apache2/sites-enabled/dev.$username
+sed "s/$username//g" /etc/apache2/conf.d/userdir>/etc/apache2/conf.d/userdir.tmp
+mv /etc/apache2/conf.d/userdir.tmp /etc/apache2/conf.d/userdir
+/etc/init.d/apache2 reload
+
+###########################
+### delete folders      ###
+userdel -r $username
+###########################

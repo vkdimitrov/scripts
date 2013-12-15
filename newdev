@@ -1,0 +1,60 @@
+#!/bin/bash
+echo "adding new system user "
+echo username:
+read username
+
+echo new system password:
+read -s pass
+
+useradd $username -m -p$pass -s /bin/bash
+echo "adding $username in samba users table, use same password "
+#smbpasswd -a $username
+pdbedit -a -u $username
+
+echo "make public web folder public_html "
+mkdir /home/$username/public_html 
+mkdir /home/$username/public_html/$username
+chown $username /home/$username/public_html
+chgrp $username /home/$username/public_html
+echo "updating apache userdir "
+/root/bin/enusrdir.pl $username
+
+echo "updating apache virtual hosts"
+cd /etc/apache2/sites-enabled/
+vhostfile=dev.$username
+touch $vhostfile
+echo "<VirtualHost *:80>">$vhostfile
+echo "        ServerName     $username.dev.vjsoft.net">>$vhostfile
+echo "        ServerAdmin     hosting@vjsoft.net">>$vhostfile
+echo "        DocumentRoot    /home/$username/public_html/">>$vhostfile
+echo " ">>$vhostfile
+echo "        <IfModule itk.c>">>$vhostfile
+echo "                AssignUserID  $username $username">>$vhostfile
+echo "        </IfModule>">>$vhostfile
+echo "</VirtualHost>">>$vhostfile
+echo "reloading apache conf"
+apache2ctl graceful
+
+echo "reloading samba conf"
+/root/bin/ensmbhomedir.pl $username
+/etc/init.d/samba reload
+
+echo "making rsa key for $username leave default and without pass"
+sudo -u $username ssh-keygen -t rsa
+mv /home/$username/.ssh/id_rsa.pub /home/$username/.ssh/$username@kapitan.pub 
+
+### ading pub file to gitosis-admin
+cd /home/git/gitosis-admin/
+sudo -u git git pull
+cp /home/$username/.ssh/$username@kapitan.pub /home/git/gitosis-admin/keydir/$username@kapitan.pub
+##sudo -u git git add keydir/$username@kapitan.pub
+sudo -u git git commit -m "adding $username@kapitan.pub"
+sudo -u git git push
+
+#####################################
+echo "adding crontab for autovirtualhosts"
+echo "*/1 * * * * /root/bin/autovhost.sh $username 1> /dev/null">> /var/spool/cron/crontabs/root
+#echo "create vpn cert"
+#/root/bin/openvpn_keymaker $username
+#mkdir /home/$username/vpn
+#cp /root/vpn/$username/$username.zip /home/$username/vpn/

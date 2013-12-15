@@ -24,21 +24,21 @@ else
 
 	#setvame env promenlivata @site 
         case "$1" in
-               	factor)   site="root@77.77.150.43:/var/www/factorin-bg.com-deploy"
+               	factor)   site="xxxx@xx.xx.xx.xx:/var/www/..."
 			  rsync --rsh='ssh -p11122' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
                     ;;
-		br3)	site="bridgebg@new.bridge.bg:/home/bridgebg/public_html"
+		br3)	site="xxxx@xx.xx.xx.xx:/var/www/..."
 			rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
 		    ;;
-		ues) 	site="ssh uniqp1jx@new.uniqueestates.net:/home/uniqp1jx/public_html" 
+		ues) 	site="xxxx@xx.xx.xx.xx:/var/www/..." 
 			rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
 		    ;;
 		sms-reminder)
-			 site="bridgebg@new.bridge.bg:/home/bridgebg/smsreminder.bg"
+			 site="xxxx@xx.xx.xx.xx:/var/www/..."
                         rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
 		    ;;
 		ifg )
-			site="ifgleasingssh@ifgleasing.eu:/"
+			site="xxxx@xx.xx.xx.xx:/var/www/..."
 			rsync --rsh='ssh -p10022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
 		    ;;
                 voltron )   site="voltron.lan"

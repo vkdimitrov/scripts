@@ -1,0 +1,102 @@
+#!/bin/bash
+
+BACKUP_DAYS=$2
+BACKUPS_DIR='/mnt/backup/apollo/'$1
+BACKUP_DIR="${BACKUPS_DIR}/$(date +%Y%m%d)"
+BACKUP_DIRS="
+/boot
+/etc
+/root
+/var/lib/mysql
+/home
+/var/www
+"
+BACKUP_EXCLUDES="sess_*"
+DATABASES=`echo 'SHOW DATABASES' | mysql -pkolibkata1213| egrep -v '^Database$'`
+
+umask 277
+
+#echo "Mounting drive"
+#/bin/mount /mnt/spare || exit 1
+
+echo "* mkdir"
+mkdir ${BACKUP_DIR} || exit 2
+echo "* cd"
+cd ${BACKUP_DIR} || exit 3
+echo "* chmod"
+chmod 700 ${BACKUP_DIR} || exit 4
+
+### MYSQL
+cd ${BACKUP_DIR}
+echo "Backing up MySQL:"
+echo "* mkdir"
+mkdir mysql || exit 7
+echo "* cd"
+cd mysql || exit 8
+for DATABASE in ${DATABASES}; do
+	echo -e -n "* ${DATABASE} ... "
+
+	FILE="${DATABASE}.sql"
+	rm -f "$FILE"
+	/usr/bin/mysqldump -uroot -pkolibkata1213 --extended-insert \
+		--add-drop-database \
+		--disable-keys \
+		--flush-privileges \
+		--quick \
+		--routines \
+		--skip-comments \
+		--triggers \
+		"${DATABASE}" | gzip -c > $FILE.gz
+	if [ "x$?" == "x0" ]; then
+		echo "OK"
+	else
+		echo "FAILED"
+	fi
+done
+
+#/usr/bin/mysqldump --extended-insert --all-databases --master-data | gzip -c > all-databases.sql.gz
+#/usr/bin/mysqldump --extended-insert \
+#	--all-databases \
+#	--add-drop-database \
+#	--disable-keys \
+#	--flush-privileges \
+#	--quick \
+#	--routines \
+#	--skip-comments \
+#	--triggers | gzip -c > all-databases.sql.gz
+
+### FILESYSTEM
+cd "${BACKUP_DIR}"
+echo "Backing up filesystem:"
+echo "* mkdir"
+mkdir fs || exit 5
+echo "* cd"
+cd fs || exit 6
+
+for DIR in ${BACKUP_DIRS}; do
+	DIRNAME=`dirname "${DIR}"`
+	echo -e -n "* ${DIR} ... "
+	mkdir -p .${DIRNAME} || ( echo "FAILED (mkdir)" && continue )
+#	cp -pR ${DIR} .${DIRNAME} || ( echo "FAILED (cp)" && continue )
+	tar --exclude="${BACKUP_EXCLUDES}" -cvf .${DIR}.tar ${DIR} || ( echo "FAILED (tar)" && continue )
+	echo "OK"
+	sync
+done
+
+### CLEANUP
+echo "cd ${BACKUPS_DIR}"
+cd $BACKUPS_DIR
+echo "Removing old backups:"
+#find . -mindepth 1 -maxdepth 1 -type d -name '20??????' -mtime +${BACKUP_DAYS} -exec rm -rf {} \;
+	FILECOUNT=`ls -l |wc -l`
+	d=`expr $BACKUP_DAYS + 2`
+        while [ "$FILECOUNT" -ge "$d" ];
+        do 
+        fileToDel=`ls -l --sort=time |tail -1 |awk '{ print $9 }'`
+	echo "rm -r "$fileToDel
+	rm -r $fileToDel
+       FILECOUNT=`ls -l |wc -l`
+        done
+
+#echo "Unmounting drive:"
+#/bin/umount /mnt/spare || exit 7

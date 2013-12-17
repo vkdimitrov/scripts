@@ -12,7 +12,7 @@ BACKUP_DIRS="
 /var/www
 "
 BACKUP_EXCLUDES="sess_*"
-DATABASES=`echo 'SHOW DATABASES' | mysql -pkolibkata1213| egrep -v '^Database$'`
+DATABASES=`echo 'SHOW DATABASES' | mysql -pparola| egrep -v '^Database$'`
 
 umask 277
 
@@ -38,7 +38,7 @@ for DATABASE in ${DATABASES}; do
 
 	FILE="${DATABASE}.sql"
 	rm -f "$FILE"
-	/usr/bin/mysqldump -uroot -pkolibkata1213 --extended-insert \
+	/usr/bin/mysqldump -uroot -pparola --extended-insert \
 		--add-drop-database \
 		--disable-keys \
 		--flush-privileges \

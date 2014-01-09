@@ -7,44 +7,49 @@ if [ "$1" = "gitosis-admin" ];
 then
         continue
 else
-	#triem stariqt deploy source
-        rm -rf ../production/deploy/$1
-        mkdir -p ../production/deploy/$1
-	
-        cd /home/git/public_html/dev/$1
-	#get branch
-	original_branch=`git branch |grep \* |cut -d\* -f2`
-	#checkout master 
-	git checkout master
-	git pull origin master 
+        #triem stariqt deploy source
+        rm -rf /home/git/production/deploy/$1
+        mkdir -p /home/git/production/deploy/$1
+
+        cd /home/git/production/repos/
+        git clone git@dev.vjsoft.net:$1.git
+        cd /home/git/production/repos/$1
         #kopirame samo sorsovete ot master versiqta
-	git checkout-index -a -f --prefix=/home/git/production/deploy/$1/
-	#checkout original branch
-	git checkout $original_branch
-
-	#setvame env promenlivata @site 
+        git checkout-index -a -f --prefix=/home/git/production/deploy/$1/
+        cd /home/git/production/
+        rm -rf /home/git/production/repos/$1
+        #setvame env promenlivata @site
         case "$1" in
-               	factor)   site="xxxx@xx.xx.xx.xx:/var/www/..."
-			  rsync --rsh='ssh -p11122' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
+        factor)
+                        site="root@factoring-bg.com:/var/www/factorin-bg.com-deploy"
+                        ports='ssh -p11122'
                     ;;
-		br3)	site="xxxx@xx.xx.xx.xx:/var/www/..."
-			rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
-		    ;;
-		ues) 	site="xxxx@xx.xx.xx.xx:/var/www/..." 
-			rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
-		    ;;
-		sms-reminder)
-			 site="xxxx@xx.xx.xx.xx:/var/www/..."
-                        rsync --rsh='ssh -p1022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
-		    ;;
-		ifg )
-			site="xxxx@xx.xx.xx.xx:/var/www/..."
-			rsync --rsh='ssh -p10022' -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
-		    ;;
-                voltron )   site="voltron.lan"
+        br3)
+                        site="bridgebg@bridge.bg:/home/bridgebg/public_html"
+                        ports='ssh -p1022'
                     ;;
-                *) echo "nqma takova repo" exit
-                   ;;
+        ues)
+                        site="uniqp1jx@uniqueestates.net:/home/uniqp1jx/public_html"
+                        ports='ssh -p1022'
+                    ;;
+        sms-reminder)
+                        site="bridgebg@bridge.bg:/home/bridgebg/smsreminder.bg"
+                        ports='ssh -p1022'
+                    ;;
+        geograf)
+                        site="geografb@geograf.bg:/home/geografb/public_html"
+                        ports='ssh -p1022'
+                ;;
+        ifg)
+                        site="ifgleasingssh@ifgleasing.eu:/var/www/clients/client3/web4/test"
+                        ports='ssh -p10022'
+                    ;;
+        voltron)
+                        site="vkdimitrov@vladko.org:/home/vkdimitrov/public_html/voltron"
+                        ports='ssh -p229'
+                    ;;
+               *) echo "nqma takova repo" exit
+                    ;;
         esac
+        /usr/bin/rsync --rsh="$ports" -cruv --size-only --exclude-from="/home/git/production/deploy/$1/.gitignore" --delete-after /home/git/production/deploy/$1/ $site/
 fi
-
